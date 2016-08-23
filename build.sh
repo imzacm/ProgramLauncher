@@ -1,19 +1,11 @@
 #! /bin/bash
 
-#for folders in menu,
-#  read menu.conf and set vars
-#  for src files in each folders
-#    switch file extension, case extension vars set in conf files
-#      execute compiler for language
-#  if src files > 1 then link all output files
-#  rename out file to output variable for folder
-
 cd source/menu
-. ../default.conf
 
 for dir in `find . -type d`
 do
   cd $dir
+  . ../../default.conf
   . menu.conf
   for f in *.*
   do
@@ -21,17 +13,20 @@ do
     extension="${filename##*.}"
     filename="${filename%.*}"
     case $extension in
-      $cc|$cpp)
-        g++ $filename.$extension $cxflags
-        ;;
-      $c)
-        gcc $filename.$extension $cxflags
+      "cc"|"cpp"|"c")
+        g++ -c $filename.$extension $cxflags -o $filename.obj
         ;;
     esac
   done
+  num_files=$(ls -l log* | wc -l)
+  if [ -z "$output" ]
+  then
+    output="$name"
+  fi
+  if [ $num_files -gt 1 ]
+  then
+    files=(./*.obj)
+    g++ -o $output "${files[@]}"
+  fi
   cd ../
 done
-
-echo $cc
-echo $cpp
-echo $c
